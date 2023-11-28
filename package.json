@@ -1,0 +1,29 @@
+{
+  "name": "better-dono-meter",
+  "version": "1.0.0",
+  "description": "Twitch Donation Meter",
+  "main": "app.tsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "esbuild app.tsx --bundle --watch --servedir=www --outdir=www/js",
+    "build": "esbuild app.tsx --bundle --outdir=dist --minify --sourcemap"
+  },
+  "keywords": [
+    "twitch"
+  ],
+  "author": "wudgub",
+  "license": "ISC",
+  "dependencies": {
+    "@types/react": "17.0.0",
+    "@types/react-dom": "17.0.0",
+    "axios": "^1.6.2",
+    "esbuild": "^0.19.7",
+    "lodash": "^4.17.21",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-use-websocket": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
+}
