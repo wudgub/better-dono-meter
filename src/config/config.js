@@ -5,14 +5,14 @@ import { merge } from 'lodash';
 const config = {
 	dev: 'dev',
 	prod: 'prod',
-	port: process.env.NODE_PORT || 3000,
+	//port: process.env.NODE_PORT || 3000,
 	expireTime: 24 * 60 * 60 * 365 // 1 year
 	//expireTime: 30 // 30 seconds for testing
 };
 
-// default to dev if no environment variable set
-process.env.NODE_ENV = process.env.NODE_ENV || config.dev;
-config.env = process.env.NODE_ENV;
+// defaulting to dev.
+// TODO: make this better or change to prod when done.
+config.env = 'dev.js';
 
 let envConfig;
 // If file doesn't exist, require could error out

@@ -5,3 +5,6 @@ node_modules/
 # config files
 src/config/dev.js
 src/config/prod.js
+
+# misc
+dev_notes.txt

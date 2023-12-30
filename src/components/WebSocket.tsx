@@ -3,6 +3,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 const axios = require('axios').default;
 
 import config from '../config/config';
+import * as api from '../api/twitch';
 
 
 
@@ -20,46 +21,56 @@ export const WebSocket = () => {
   const [socketID, setSocketID] = useState(null);
   const [subEnabled, setSubEnabled] = useState(false);
   const [broadcasterID, setBroadcasterID] = useState(null);
+  const [encodedToken, setEncodedToken] = useState(null);
 
 
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(socketUrl);
 
-  // get broadcaster ID. Run 
-  const getBroadcasterID = (username) => {
-    // axios call here to get broadcaster id
-    axios.get('https://api.twitch.tv/helix/users', {
-      params: {
-        login: username
-      }
-    })
-      .then((response) => {
-        console.log(response);
-      })
-      .catch((error) => {
-        console.error(error);
-      })
-      .finally(() => {
-        console.log('user call done');
-      })
-  };
-
-  function getOAuthToken() {
-    //axios call to get oauth token 
-    let token = config.app_token;
-    let secret = config.app_secret;
-  };
+  // const oAuthPromise = new Promise((resolve, reject) => {
+  //   resolve(api.getOAuthToken(config.app_id, config.app_secret));
+  // })
 
 
 
   useEffect(() => {
     if (lastJsonMessage !== null) {
       setMessageHistory((prev) => prev.concat(lastJsonMessage['metadata']['message_type']));
+      // switch statement handles messages from API:
+      // https://dev.twitch.tv/docs/eventsub/handling-websocket-events/
       switch (lastJsonMessage["metadata"]["message_type"]) {
+        // Called when WS first opened.
         case "session_welcome":
-            setSocketID(lastJsonMessage["payload"]["session"]["id"]);
-            console.log("socket ID set: ", lastJsonMessage["payload"]["session"]["id"]);
-            //TODO: figure out to to sub to EventSub here...
+            console.log('session_welcome hit');
+            if(socketID == null) {
+              setSocketID(lastJsonMessage["payload"]["session"]["id"]);
+            }
+            if (encodedToken == null) {
+              api.getOAuthToken(config.app_id, config.app_secret)
+                .then((res) => {
+                  console.log('setting token...', res.access_token);
+                  setEncodedToken(res.access_token);
+                  api.validateToken(res.access_token)
+                    .then((res) => { 
+                      let msg = "OAuth token validated at: " + new Date();
+                      console.log(msg);
+                      return msg;
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      throw err;
+                    })
+                })
+                .catch((err) => {
+                  console.error(err);
+                  throw err;
+                })
+
+            // Finally need to connect EventSub:
+            // https://dev.twitch.tv/docs/eventsub/eventsub-reference/
+
+            }
             break;
+        // Called sporadically to 
         case "session_keepalive":
             console.log("keepalive hit");
             break;
@@ -81,32 +92,23 @@ export const WebSocket = () => {
   }, [lastJsonMessage, setMessageHistory]);
 
   useEffect(() => {
-    if (socketID !== null) {
-      // if already subscribed, just move on.
-      if (subEnabled) {
-        console.log("sub already enabled.");
-      } else {
-        if(broadcasterID == null) {
-          // call getbroadcasterID
-          console.log('get broadcasterID')
-        }
-        let eventSub = {
-          "type": "channel.update",
-          "version": "2",
-          "condition": {
-            "broadcaster_user_id": ""
-          },
-          "transport": {
-            "method": "websocket",
-            "session_id": socketID
-          }
-        };
-        console.log(JSON.stringify(eventSub));
-      };
-    } else {
-      console.log("socketID is null");
+    if(broadcasterID == null && encodedToken != null) {
+      api.getBroadcasterID('wudgub', encodedToken)
+        .then((res) => {
+          console.log('broadcaster res: ', res);
+          //setBroadcasterID()
+        })
+        .catch((err) => {
+          console.error(err);
+          throw err;
+        })
     }
-  }, [socketID]);
+  }, [encodedToken]);
+
+  const handleUserToken = useCallback(() =>{
+    let w = "we";
+    return ("sd");
+  }, [])
 
   const handleClickChangeSocketUrl = useCallback(
     () => setSocketUrl('wss://eventsub.wss.twitch.tv/ws'),
@@ -124,6 +126,7 @@ export const WebSocket = () => {
 
   return (
     <div>
+      <button onClick={handleUserToken}>Connect Twitch</button>
       <button onClick={handleClickChangeSocketUrl}>
         Click Me to change Socket Url
       </button>
